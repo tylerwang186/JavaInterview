@@ -31,16 +31,16 @@ public class Course {
         // TODO code application logic here
         Course course = new Course();
         
-        System.out.println(course.findAllCourse(course.readFile()));
-        System.out.println(course.findCourse(3));
-        //System.out.println(course.produceOrder(course.findAllCourse(course.readFile())));
+        System.out.println(course.preventInfiniteLoop(course.readFile()));
+        //System.out.println(course.findCourse(3));
         System.out.println("In order to complete as many of the provided course units as possible, \n adhering to the pre-requisite requirements,"
-        + "\n Students need to complete units as the following order: " + course.produceOrder(course.findAllCourse(course.readFile())));
+        + "\n Students need to complete units as the following order: " + course.reOrder(course.preventInfiniteLoop(course.readFile())));
     }
     
     /**
      * This method is to read the excel file 
      * and store data retrieved from the file into an ArrayLsit,then return it
+     * @return and ArrayList of course Id and its prerequisites
      */
     public ArrayList<Pair<Integer,Integer>> readFile() throws IOException{
         
@@ -61,65 +61,15 @@ public class Course {
         }
         return newArray;
     }
-        
+         
     /**
-    * This method is to find the most courses that can be completed within all courses provided
-    * adhering to the prerequisite requirements and return the courses
-    * @param ArrayList Pair
-    * @return all courses that can be selected
-    */
-    public  CopyOnWriteArrayList findAllCourse(ArrayList<Pair<Integer,Integer>> courseArray){
-        int preNumber = 0;
-        //CopyOnWriteArrayList<Integer> allCourseId = new CopyOnWriteArrayList<>();
-        CopyOnWriteArrayList<Integer> allCourseId = collectCourseId(courseArray);
-        CopyOnWriteArrayList<Integer> finalArray = new CopyOnWriteArrayList<>();
-       
-        //store all course Id into an ArrayList
-       // for(int courseId = 0; courseId < courseArray.size();courseId++){
-      //      allCourseId.add(courseArray.get(courseId).first);
-      //  }
-        
-        
-        //iterate all courses in the ArrayList and store the course Id into a new ArrayList
-        for(int course:allCourseId){
-            CopyOnWriteArrayList<Integer> preList = new CopyOnWriteArrayList<>();
-            int i = 0;
-            while(i < courseArray.size()){
-                    //check if the course has prerequisites
-                    if(courseArray.get(i).first == course){
-                        if(!preList.contains(courseArray.get(i).second)){
-                            preList.add(courseArray.get(i).second);
-                            //then loop the new arrayList to check the course id 
-                            //until all prerequisites are added in the new arrayList
-                            for(int n = 0;n < preList.size();n++){
-                                int c = 0;
-                                while(c<courseArray.size()){
-                                    if(courseArray.get(c).first.equals(preList.get(n))){
-                                        if(!preList.contains(courseArray.get(c).second)){
-                                            preList.add(courseArray.get(c).second);
-                                        }   
-                                    }   
-                                    c++;
-                            }
-                        }
-                    }
-                }
-                i++;
-            }
-            //to check if the prerequisite list contains the course itself
-            //if so the course cannot be selected
-            if(preNumber < preList.size() & !preList.contains(course)){
-                preNumber = preList.size();
-                System.out.print(course);
-                finalArray = preList;
-            }      
-        }
-        return finalArray;
-    }
-    
+     * This method is to collect all courses Id
+     * @param courseArray
+     * @return all courses Id
+     */
     public CopyOnWriteArrayList collectCourseId(ArrayList<Pair<Integer,Integer>> courseArray){
         CopyOnWriteArrayList<Integer> allCourseId = new CopyOnWriteArrayList<>();
-       
+  
         //store all course Id into an ArrayList
         for(int courseId = 0; courseId < courseArray.size();courseId++){
             allCourseId.add(courseArray.get(courseId).first);
@@ -127,16 +77,26 @@ public class Course {
         return allCourseId;
     }
     
-    public void loop(ArrayList<Pair<Integer,Integer>> courseArray){
+    /**
+    * This method is to find the most courses that can be completed within all courses provided
+    * adhering to the prerequisite requirements and return the courses
+    * @param Pair
+    * @return all courses that can be selected
+    */
+    public CopyOnWriteArrayList findAllCourses(ArrayList<Pair<Integer,Integer>> courseArray,int course){
         CopyOnWriteArrayList<Integer> preList = new CopyOnWriteArrayList<>();
         int i = 0;
             while(i < courseArray.size()){
                     //check if the course has prerequisites
-                    if(courseArray.get(i).first == 0)//course){
+                    if(courseArray.get(i).first == course){
+                        
+                        
                         if(!preList.contains(courseArray.get(i).second)){
                             preList.add(courseArray.get(i).second);
                             //then loop the new arrayList to check the course id 
                             //until all prerequisites are added in the new arrayList
+                            
+                            
                             for(int n = 0;n < preList.size();n++){
                                 int c = 0;
                                 while(c<courseArray.size()){
@@ -145,13 +105,40 @@ public class Course {
                                             preList.add(courseArray.get(c).second);
                                         }   
                                     }   
-                                    c++;
-                                
-                            }
+                                    c++;                 
+                                }
+                            }     
                         }
                     }
-                }
                 i++;
+            }
+        return preList;
+    }
+    
+    /**
+    * This method is to find the most courses that can be completed within all courses provided
+    * adhering to the prerequisite requirements and return the courses
+    * @param Pair
+    * @return all courses that can be selected
+    */
+    public CopyOnWriteArrayList preventInfiniteLoop(ArrayList<Pair<Integer,Integer>> courseArray){
+        int preNumber = 0;
+        CopyOnWriteArrayList<Integer> allCourseId = collectCourseId(courseArray);
+        CopyOnWriteArrayList<Integer> finalArray = new CopyOnWriteArrayList<>();
+       
+        //iterate all courses in the ArrayList and store the course Id into a new ArrayList
+        for(int course:allCourseId){
+            CopyOnWriteArrayList<Integer> preList = findAllCourses(courseArray,course);
+            
+            //to check if the prerequisite list contains the course itself
+            //if so the course cannot be selected
+            if(preNumber < preList.size() & !preList.contains(course)){
+                preNumber = preList.size();
+                System.out.print(course);
+                finalArray = preList;
+            }             
+        }
+        return finalArray;
     }
     
     /**
@@ -159,7 +146,7 @@ public class Course {
      * @param courseOrder
      * @return the re-ordered courses Id
      */
-    public CopyOnWriteArrayList produceOrder(CopyOnWriteArrayList<Integer>courseOrder){
+    public CopyOnWriteArrayList reOrder(CopyOnWriteArrayList<Integer>courseOrder){
         CopyOnWriteArrayList<Integer> allCourseId = new CopyOnWriteArrayList<>();
         CopyOnWriteArrayList<Integer> newCourseOrder = new CopyOnWriteArrayList<>();
         //store all course Id into an ArrayList
@@ -177,84 +164,14 @@ public class Course {
         newCourseOrder.addAll(courseOrder);
         return newCourseOrder;
     } 
-    
-     /**
-     * This method is to find all prerequisites with a given course Id
-     * @param courseId
-     * @return the courses
-     */
-    public CopyOnWriteArrayList findCourse(int courseId) throws IOException{
-        readFile();
-        CopyOnWriteArrayList<Integer> intList = new CopyOnWriteArrayList<>();
-        int preNumber = 0;
-        int i = 0;
-        //first loop to check the course id in the array
-        while(i<newArray.size()){
-            if(newArray.get(i).first == courseId){
-                if(!intList.contains(newArray.get(i).second)){
-                    intList.add(newArray.get(i).second);
-                    //then loop the new arrayList to check the course id 
-                    //until all prerequisites are added in the new arrayList
-                    for(int n = 0;n < intList.size();n++){
-                        int c = 0;
-                        while(c<newArray.size()){
-                            if(newArray.get(c).first.equals(intList.get(n))){
-                                if(!intList.contains(newArray.get(c).second)){
-                                    intList.add(newArray.get(c).second);
-                                }
-                            }
-                            c++;
-                        }
-                    }
-                }
-            }
-            i++;
-            if(preNumber < intList.size()){
-                preNumber = intList.size();
-            }
-        }
-        return intList;
-    }
-    
-    
-    public CopyOnWriteArrayList firstRecursion(int courseId) throws IOException{
-        readFile();
-        CopyOnWriteArrayList<Integer> intList = new CopyOnWriteArrayList<>();
-        int preNumber = 0;
-        int i = 0;
-        //first loop to check the course id in the array
-        if(i<newArray.size()){
-            //return this.firstRecursion(courseId);
-            if(newArray.get(i).first == courseId){
-                if(!intList.contains(newArray.get(i).second)){
-                    intList.add(newArray.get(i).second);
-                    //then loop the new arrayList to check the course id 
-                    //until all prerequisites are added in the new arrayList
-                    for(int n = 0;n < intList.size();n++){
-                        int c = 0;
-                        while(c<newArray.size()){
-                            if(newArray.get(c).first.equals(intList.get(n))){
-                                if(!intList.contains(newArray.get(c).second)){
-                                    intList.add(newArray.get(c).second);
-                                }
-                            }
-                            c++;
-                        }
-                    }
-                }
-            }
-            i++;
-            return this.firstRecursion(courseId);
-            
-            //if(preNumber < intList.size()){
-            //    preNumber = intList.size();
-            //}
-        }
-        return intList;
-    }
-    
-    
 }
+
+/**
+ * The class is created to represent each course with its prerequisite 
+ * @author yihanwang
+ * @param <A>
+ * @param <B> 
+ */
 
 class Pair<A,B>{
     public final A first;
